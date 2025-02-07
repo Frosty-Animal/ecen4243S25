@@ -10,6 +10,8 @@
 // Add two Q1.31 fixed point numbers
 int add_q31(int a, int b) {
   int result = a + b;
+
+  return result;
 }
 
 // Multiplly two Q1.31 fixed point numbers
