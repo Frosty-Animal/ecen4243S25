@@ -1,0 +1,49 @@
+.section .text
+    .global add_q31
+    .global mul_q31
+    .global fir
+
+add_q31:
+    ; int add_q31(int a, int b)
+    ; a is in r0, b is in r1
+    add r0, r1, r0  ; result = a + b
+    bx lr            ; return result in r0
+
+mul_q31:
+    ; int mul_q31(int a, int b)
+    ; a is in r0, b is in r1
+    mov r2, r0      ; move a to r2
+    mov r3, r1      ; move b to r3
+    mul r2, r3      ; res = a * b
+    mov r0, r2      ; move result to r0
+    asr r0, r0, #31 ; result = res >> 31
+    bx lr           ; return result in r0
+
+fir:
+    ; void fir(int x[], int c[], int y[], int n, int m)
+    ; x is in r0, c is in r1, y is in r2, n is in r3, m is in r4
+    mov r5, #0      ; j = 0
+loop_j:
+    cmp r5, r3      ; compare j with n
+    bgt end_fir     ; if j > n, exit
+    sub r6, r4, #1  ; r6 = m - 1
+    add r7, r5, r6  ; r7 = j + m - 1
+    str r0, [r2, r5, lsl #2] ; y[j] = 0
+    mov r8, #0      ; i = 0
+loop_i:
+    cmp r8, r4      ; compare i with m
+    bge end_loop_i  ; if i >= m, exit
+    ldr r9, [r1, r8, lsl #2] ; load c[i]
+    ldr r10, [r0, r7, lsl #2] ; load x[j - i + (m - 1)]
+    bl mul_q31      ; call mul_q31(c[i], x[j - i + (m - 1)])
+    ldr r11, [r2, r5, lsl #2] ; load y[j]
+    bl add_q31      ; call add_q31(y[j], result)
+    str r0, [r2, r5, lsl #2] ; store result back to y[j]
+    add r8, r8, #1  ; i++
+    b loop_i        ; repeat for next i
+end_loop_i:
+    add r5, r5, #1  ; j++
+    b loop_j        ; repeat for next j
+end_fir:
+    bx lr           ; return from fir
+
