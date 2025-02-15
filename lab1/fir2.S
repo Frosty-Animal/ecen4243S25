@@ -15,47 +15,53 @@
 // t5: pointer to x[j-i+(m-1)] 
 // t6: value of c[i]
 // a5: value of x[j-1+(m-1)]
-// s3: temp variable for multiplier method result after shift
-// s2: multiflier variable result before shift
+// ALL S ADDRESS ARE RESERVED DONT USE THEM
+
+# &y[n-m]
+# &y[0] = 0xA000_0000
+# &y + (n-m) words = &y[n-m]
+# &y + 4(n-m) bytes = 0xA000_0000 + 4*16
+
 
 .global fir
 
-
-    # a0 = x, a1 = c, a2 = y, a3 = n, a4 = m;
-
 fir:
-    # s0 = i, s1, = j;
+    
     sub t0, a3, a4
-    add t0, t0, 1
     slli t0, t0, 2
-    lw t1, 4(a0)
-    lw t2, 4(a1)
+    add t0, t0, a2
+
+    slli t1, a4, 2
+    add t1, t1, a1
+
+    addi t2, a4, -1
+    slli t2, t2, 2
+    add t2, t2, a0
+
+forj:
+    bge t4, t0, donej
+    li, t2, 0
+    sw 0, 0(a2)
 
 
-Outer loop:
+    j fori
+fori:
+    bge t6, t1, donei
+    slli t5, t5, 2
+    mul t3, t6, a5
+    add t3, t3, 0(a2)
+    sw t3, 0(a2)
+    addi t1, t1, 1
 
-    bge ,s1, t0, donej
-    sw zero, 4(a2)
-    jmp Inner loop
-    
-Inner loop:
+    j donei
 
-    bge ,s0, t1, donei
-    
-    jmp mul_q31
-    jmp add_q31
-    addi s0, s0, 1
-    sw t3, a2
+donei:
 
-mul_q31:
-    mul s2, t4, t5
-    srli s3, s2, 31
-    jr ra
+    addi t0, t0, 1
+    j forj     
 
-add_q31:
-    
-    add t3, a2, s3
-    jr ra
+donej:
+    ret
 
 donei:
 
